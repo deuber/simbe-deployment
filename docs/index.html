@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An outside view of Simbe Robotics' Robotics Deployment & Support Engineer role: the store deployment lifecycle, quality gates, troubleshooting, tooling, and how my background maps to it.">
+<meta property="og:title" content="Deploying Tally at Scale">
+<meta property="og:description" content="Role investigation by David Deuber: deploying Simbe's Tally robots, from pre-deployment to handoff.">
+<meta name="color-scheme" content="light dark">
+<title>Deploying Tally at Scale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single reading column (field notes) with wider breakouts for the lifecycle track and tables */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --fg: #15202a;
+  --muted: #566573;
+  --line: #d8dee5;
+  --accent: #1d5bc6;       /* blueprint blue */
+  --accent-soft: #e3ecfb;
+  --flag: #b86e00;         /* blocker amber */
+  --flag-soft: #fbefd9;
+  --ok: #1f7a4d;
+  --code-bg: #eaeef3;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151b; --surface: #17202a; --fg: #e4eaf0; --muted: #98a6b3; --line: #2a3643;
+    --accent: #7aa8f5; --accent-soft: #1b2b45; --flag: #f0b357; --flag-soft: #3a2a12; --ok: #5fc694;
+    --code-bg: #1c2733; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151b; --surface: #17202a; --fg: #e4eaf0; --muted: #98a6b3; --line: #2a3643;
+  --accent: #7aa8f5; --accent-soft: #1b2b45; --flag: #f0b357; --flag-soft: #3a2a12; --ok: #5fc694;
+  --code-bg: #1c2733; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img { max-width: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16.5px; line-height: 1.62; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 56px 80px; }
+.col { max-width: 700px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.eyebrow { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; gap: 18px; padding-block: 44px; border-top: 1px solid var(--line); }
+header { display: grid; gap: 20px; padding-bottom: 40px; }
+.lede { font-size: 1.2rem; color: var(--fg); max-width: 680px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+.callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; font-size: 1.05rem; max-width: 680px; }
+code, pre { font-family: var(--mono); font-size: 0.86rem; }
+:not(pre) > code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+ul.plain { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; }
+
+/* Scale figures */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.fact { background: var(--surface); padding: 18px; display: grid; gap: 4px; align-content: start; }
+.fact b { font-family: var(--display); font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.fact span { font-size: 0.9rem; color: var(--muted); }
+
+/* Lifecycle track */
+.track { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; counter-reset: stage; margin-top: 8px; }
+.stage { counter-increment: stage; display: grid; gap: 10px; align-content: start; padding: 0 14px 0 0; position: relative; min-width: 0; }
+.stage::before { content: counter(stage, decimal-leading-zero); font-family: var(--mono); font-size: 0.8rem; color: var(--accent); font-weight: 500; }
+.stage .bar { height: 4px; background: var(--accent); margin-right: -14px; border-radius: 0; }
+.stage:last-child .bar { margin-right: 0; background: var(--ok); }
+.stage h3 { font-size: 1rem; }
+.stage p { font-size: 0.88rem; color: var(--muted); }
+@media (max-width: 860px) {
+  .track { grid-template-columns: 1fr; gap: 22px; }
+  .stage { padding: 0 0 0 16px; border-left: 3px solid var(--accent); }
+  .stage .bar { display: none; }
+  .stage:last-child { border-left-color: var(--ok); }
+}
+
+/* Stage detail cards */
+.stage-detail { display: grid; gap: 14px; }
+.sd { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px 24px; }
+.sd > h3 { grid-row: span 3; }
+.sd h3 small { display: block; font-family: var(--mono); font-weight: 400; font-size: 0.75rem; color: var(--accent); margin-bottom: 4px; letter-spacing: 0.06em; }
+.sd dl { margin: 0; display: grid; gap: 10px; }
+.sd dt { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.sd dd { margin: 2px 0 0; font-size: 0.95rem; }
+.sd dd.risk { color: var(--fg); background: var(--flag-soft); border-radius: 4px; padding: 6px 10px; }
+.sd dd.auto { background: var(--accent-soft); border-radius: 4px; padding: 6px 10px; }
+@media (max-width: 640px) { .sd { grid-template-columns: 1fr; } .sd > h3 { grid-row: auto; } }
+
+/* Tables */
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.93rem; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--mono); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 500; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+
+/* Triage layers */
+.layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.layer { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.layer ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: 0.92rem; }
+.tag { justify-self: start; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); }
+
+/* Code */
+pre { background: var(--code-bg); border-radius: 6px; padding: 18px 20px; overflow-x: auto; line-height: 1.55; margin: 0; }
+.c { color: var(--muted); }
+.k { color: var(--accent); }
+.s { color: var(--ok); }
+
+/* Tools list */
+.tools { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.tool { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 6px 24px; padding-block: 16px; border-bottom: 1px solid var(--line); }
+.tool h3 { font-size: 1rem; }
+.tool p { font-size: 0.95rem; }
+.tool .why { color: var(--muted); font-size: 0.88rem; grid-column: 2; }
+@media (max-width: 640px) { .tool { grid-template-columns: 1fr; } .tool .why { grid-column: 1; } }
+
+/* Day timeline */
+.day { display: grid; gap: 0; }
+.slot { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 18px; padding-block: 12px; border-bottom: 1px dashed var(--line); }
+.slot time { font-family: var(--mono); font-size: 0.88rem; color: var(--accent); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.slot p { font-size: 0.95rem; }
+
+/* Questions */
+ol.questions { margin: 0; padding-left: 1.4em; display: grid; gap: 12px; }
+ol.questions li::marker { font-family: var(--mono); color: var(--accent); }
+
+/* Fit table */
+.chip { display: inline-block; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
+.chip.strong { background: var(--accent-soft); color: var(--accent); }
+.chip.partial { background: var(--flag-soft); color: var(--flag); }
+td.evidence { font-weight: 400; white-space: normal; }
+.gaps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.gap { border: 1px dashed var(--flag); border-radius: 6px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.gap p { font-size: 0.92rem; }
+.gap p.plan { color: var(--muted); }
+
+footer { border-top: 1px solid var(--line); padding-top: 28px; display: grid; gap: 10px; font-size: 0.88rem; color: var(--muted); }
+footer ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+@media (prefers-reduced-motion: no-preference) { a { transition: color .15s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Role investigation · Robotics Deployment &amp; Support Engineer · Simbe Robotics</div>
+  <h1>Deploying Tally at Scale</h1>
+  <p class="lede">Before my first call with Simbe, I worked out what I think this job is day to day: what a single store deployment involves, where it's likely to go wrong, and what I'd automate first. This is an outside view based on public information and the job description. I expect parts of it to be wrong, and the call is my chance to find out which.</p>
+  <div class="meta">
+    <span>David Deuber</span>
+    <span>October 2026</span>
+    <span>Companion to <a href="https://deuber.github.io/hermes-claude-automations/">Hermes + Claude automations</a></span>
+  </div>
+</header>
+
+<section>
+  <div class="eyebrow">Context</div>
+  <h2>Why this role exists now</h2>
+  <div class="facts">
+    <div class="fact"><b>3,000+</b><span>autonomous units under contract (Sept 2026)</span></div>
+    <div class="fact"><b>75+</b><span>retail banners, in nearly a dozen countries</span></div>
+    <div class="fact"><b>500</b><span>Tally deployments at Kroger alone (Aug 2026)</span></div>
+    <div class="fact"><b>4.0</b><span>Tally generation reaching customers from mid-2026</span></div>
+  </div>
+  <div class="col" style="display:grid;gap:14px">
+    <p>Simbe sells Store Intelligence: Tally robots, Tally Spot fixed sensors and RFID scan the shelves, and the platform turns those scans into out-of-stock, pricing and planogram tasks for store teams and data for brands. The product has been proven. The challenge now is installing it fast enough. Moving from a contracted unit to a working robot in a store means a site visit, a network, a map and a validation period, and every one of those steps takes time.</p>
+    <p>The job posting confirms this. It merges physical deployment support and digital onboarding into one role so that one person owns each site from start to finish. Simbe plans to hire about two people on contracts through February 2027 to cover near-term rollout volume. It also asks for people who will automate the work rather than just do it.</p>
+  </div>
+  <p class="callout">My read: Simbe is paying for <strong>deployment throughput with consistent quality</strong>. Every deployment I own should go faster than the last, and every problem I hit should be less likely at the next site.</p>
+</section>
+
+<section>
+  <div class="eyebrow">The job, as a sequence</div>
+  <h2>One store, from contract to handoff</h2>
+  <div class="col"><p>The posting lists the lifecycle in order. Here it is as a track, followed by what I think each stage involves, where it breaks, and what I'd automate.</p></div>
+  <div class="track" aria-label="Deployment lifecycle">
+    <div class="stage"><div class="bar"></div><h3>Pre-deployment</h3><p>Credentials, dock spot, traversal areas, hardware ready</p></div>
+    <div class="stage"><div class="bar"></div><h3>Physical install</h3><p>Remote contractor on site, guided by chat and voice</p></div>
+    <div class="stage"><div class="bar"></div><h3>Network</h3><p>Robot on store Wi-Fi, reaching Simbe's cloud</p></div>
+    <div class="stage"><div class="bar"></div><h3>Digital config</h3><p>Map, traversal patterns, routes, schedules</p></div>
+    <div class="stage"><div class="bar"></div><h3>Validation</h3><p>Decode, OOS, price, coverage, upload speed vs thresholds</p></div>
+    <div class="stage"><div class="bar"></div><h3>Handoff</h3><p>To operations, with records in Jira and Confluence</p></div>
+  </div>
+
+  <div class="stage-detail">
+    <div class="sd">
+      <h3><small>01</small>Pre-deployment</h3>
+      <dl><dt>What I'd do</dt><dd>Confirm every site requirement before anyone travels: Wi-Fi SSID and auth method, firewall egress approved by store IT, a dock location with power, traversal areas defined, and the robot serial and hardware checked as ready.</dd></dl>
+      <dl><dt>Where it breaks</dt><dd class="risk">Store IT hasn't allowlisted the robot. The SSID uses a captive portal or 802.1X that nobody mentioned. The planned dock spot has no outlet. The answers sit in an email thread instead of the site record.</dd></dl>
+      <dl><dt>What I'd automate</dt><dd class="auto">A preflight check that reads the site record and lists blockers by name, run at T-7 and T-2 days. Anything missing becomes a Jira subtask with an owner.</dd></dl>
+    </div>
+    <div class="sd">
+      <h3><small>02</small>Physical install</h3>
+      <dl><dt>What I'd do</dt><dd>Guide a remote contractor through unboxing, dock placement, power-on and first checks in Front or Zendesk chat, with a voice call ready. Keep them on the procedure and record any deviations.</dd></dl>
+      <dl><dt>Where it breaks</dt><dd class="risk">Contractors vary in skill. Steps get skipped under time pressure. Photos and confirmations get lost in chat. Store hours limit when work can happen.</dd></dl>
+      <dl><dt>What I'd automate</dt><dd class="auto">Install checklist macros in the chat tool that ask for a photo at each checkpoint. Contractor replies get filed into the deployment ticket automatically.</dd></dl>
+    </div>
+    <div class="sd">
+      <h3><small>03</small>Network</h3>
+      <dl><dt>What I'd do</dt><dd>Get the robot associated, addressed and talking to Simbe's backend, and confirm it can upload at full size. Check roaming across access points along the aisles, not only at the dock.</dd></dl>
+      <dl><dt>Where it breaks</dt><dd class="risk">DHCP exhaustion, blocked outbound ports, DNS filtering, weak signal deep in the aisles or near freezers, or VPN tunnels that drop when the robot changes AP.</dd></dl>
+      <dl><dt>What I'd automate</dt><dd class="auto">A scripted connectivity probe (DNS, TLS to each endpoint, measured upload throughput) that produces a one-page pass/fail report I can send to store IT as-is.</dd></dl>
+    </div>
+    <div class="sd">
+      <h3><small>04</small>Digital config</h3>
+      <dl><dt>What I'd do</dt><dd>Build or review the store map, define traversal patterns and routes, and set scan schedules around store hours and busy periods.</dd></dl>
+      <dl><dt>Where it breaks</dt><dd class="risk">The store layout has changed since the survey. Seasonal displays block aisles. Schedules collide with restocking or cleaning. Config gets copied from a different store format.</dd></dl>
+      <dl><dt>What I'd automate</dt><dd class="auto">A config validator that diffs a site's config against a known-good template for that store format and flags anything unusual before go-live.</dd></dl>
+    </div>
+    <div class="sd">
+      <h3><small>05</small>Validation</h3>
+      <dl><dt>What I'd do</dt><dd>Run the first scans and score them against Simbe's quality thresholds. If a metric falls short, find out whether the cause is the robot, the network, the map or the store.</dd></dl>
+      <dl><dt>Where it breaks</dt><dd class="risk">One bad aisle drags down coverage. Slow uploads are mistaken for a scanning failure. Teams disagree about which number counts as "good enough".</dd></dl>
+      <dl><dt>What I'd automate</dt><dd class="auto">A daily early-life health report per site for the first two weeks, with each metric trended against its threshold and a cause suggested for each miss.</dd></dl>
+    </div>
+    <div class="sd">
+      <h3><small>06</small>Handoff</h3>
+      <dl><dt>What I'd do</dt><dd>Hand a healthy site to operations with a complete record: config, deviations, open issues and site contacts. Add anything new I learned to the playbook.</dd></dl>
+      <dl><dt>Where it breaks</dt><dd class="risk">Site knowledge stays in one person's head. The same failure repeats at the next site because nothing changed.</dd></dl>
+      <dl><dt>What I'd automate</dt><dd class="auto">Generate the handoff page in Confluence from the ticket history. Tag every issue with a root-cause category so patterns show up across sites.</dd></dl>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Quality gates</div>
+  <h2>The five numbers a deployment has to hit</h2>
+  <div class="col"><p>The posting lists the validation metrics. The thresholds are Simbe's internal numbers, so I haven't guessed at them. This is what I think each metric measures and what I'd check first when one comes up short.</p></div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Metric</th><th>What it tells you</th><th>First suspects when it misses</th></tr></thead>
+      <tbody>
+        <tr><td>Decode accuracy</td><td>Share of shelf labels and barcodes read correctly from captured images</td><td>Lighting, glare on label strips, camera calibration, travel speed, label stock</td></tr>
+        <tr><td>OOS detection</td><td>Whether empty or low facings are caught, with few false alerts</td><td>Planogram data out of date, deep shelves, merchandise pulled forward, image quality</td></tr>
+        <tr><td>Price verification</td><td>Whether shelf prices match the retailer's price file</td><td>Price feed timing and integration, promo tags covering labels, decode errors upstream</td></tr>
+        <tr><td>Location coverage</td><td>Share of planned aisle and shelf locations actually scanned</td><td>Blocked aisles, map or route gaps, scans ended early by battery or schedule</td></tr>
+        <tr><td>Upload speed</td><td>How fast scan data reaches the cloud after a run</td><td>Store bandwidth caps, Wi-Fi dead zones at the dock, traffic shaping, retry storms</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Troubleshooting</div>
+  <h2>Work bottom-up, write it down, escalate cleanly</h2>
+  <div class="col"><p>The posting asks me to "triage root causes systematically and elevate with clear documentation." In practice I'd check the cheapest layer to rule out first, and I'd write each escalation so the engineer receiving it doesn't need to come back with questions.</p></div>
+  <div class="layers">
+    <div class="layer"><span class="tag">Network</span><h3>Is it reachable?</h3><ul><li>Link, IP, gateway, DNS</li><li>Egress to each required endpoint</li><li>Signal and roaming along the route</li><li>VPN tunnel state and MTU</li></ul></div>
+    <div class="layer"><span class="tag">Hardware</span><h3>Is it physically healthy?</h3><ul><li>Docking contact and charge cycles</li><li>Camera and sensor status, lens condition</li><li>Drive, bumpers, e-stop</li><li>Anything that changed since the last good run</li></ul></div>
+    <div class="layer"><span class="tag">Software</span><h3>Is it configured and running?</h3><ul><li>Service and node health, recent logs (Linux, likely ROS)</li><li>Config version vs template</li><li>Map and route validity</li><li>Schedule, timezone, store hours</li></ul></div>
+  </div>
+  <div class="col"><p>Every escalation includes the symptom, the site and robot, what I ruled out and how, the logs or captures, and the impact on the deployment date.</p></div>
+</section>
+
+<section>
+  <div class="eyebrow">Automation and tooling</div>
+  <h2>What I'd build in the first 60 days</h2>
+  <div class="col"><p>These follow the posting's own list (checklists, status tracking, config validation, reporting), ordered by how much manual work each removes per site.</p></div>
+  <div class="tools">
+    <div class="tool"><h3>Site preflight checker</h3><p>Reads the site record and lists every unmet requirement by name. Runs on a schedule before install day.</p><p class="why">Blockers found a week out cost an email. Found on install day, they cost a rescheduled contractor.</p></div>
+    <div class="tool"><h3>Network probe + report</h3><p>One command on site that tests DNS, TLS to each endpoint, and upload throughput, and outputs a report I can share with store IT.</p><p class="why">Turns "the robot can't connect" into a specific request IT can act on.</p></div>
+    <div class="tool"><h3>Config validator</h3><p>Diffs each site's config against the template for its store format and flags the differences.</p><p class="why">Catches copy-paste config mistakes before they turn into a bad first week.</p></div>
+    <div class="tool"><h3>Deployment status board</h3><p>Jira automation plus a daily summary showing every assigned site, its stage, its blockers and its date risk.</p><p class="why">Lets me run several deployments at once without losing track, and gives managers status without asking.</p></div>
+    <div class="tool"><h3>Early-life health report</h3><p>Daily per-site trend of the five quality metrics against thresholds for the first two weeks.</p><p class="why">Handoff becomes a decision based on data rather than judgment.</p></div>
+    <div class="tool"><h3>Failure pattern log</h3><p>Every issue tagged by root cause, rolled up across sites, with the top patterns turned into new preflight checks.</p><p class="why">This is the "detection or prevention mechanisms" part of the posting. It keeps the same problem from recurring at site 40.</p></div>
+  </div>
+  <div class="col" style="display:grid;gap:12px">
+    <p>Here's the kind of first version I mean, before I know Simbe's actual data model. It's small and readable, and it's useful from the first day.</p>
+  </div>
+<pre><span class="c"># preflight.py — list what's still blocking a site before install day</span>
+REQUIRED = [<span class="s">"ssid"</span>, <span class="s">"wifi_auth"</span>, <span class="s">"egress_approved"</span>,
+            <span class="s">"dock_location"</span>, <span class="s">"dock_power"</span>, <span class="s">"traversal_areas"</span>, <span class="s">"robot_serial"</span>]
+
+<span class="k">def</span> preflight(site: dict) -> list[str]:
+    blockers = [<span class="s">f"missing: {k}"</span> <span class="k">for</span> k <span class="k">in</span> REQUIRED <span class="k">if not</span> site.get(k)]
+    <span class="k">if</span> site.get(<span class="s">"wifi_auth"</span>) <span class="k">in</span> (<span class="s">"captive_portal"</span>, <span class="s">"802.1x"</span>):
+        blockers.append(<span class="s">"wifi auth needs store IT action (MAC allowlist / cert)"</span>)
+    <span class="k">if</span> site.get(<span class="s">"layout_survey_age_days"</span>, <span class="k">0</span>) > <span class="k">90</span>:
+        blockers.append(<span class="s">"layout survey is stale; confirm aisles before mapping"</span>)
+    <span class="k">return</span> blockers</pre>
+  <div class="col"><p>My working method is the same one I wrote up in the <a href="https://deuber.github.io/hermes-claude-automations/">Hermes project</a> and use at Atlassian with Rovo agents. I decide what the tool should do and what "correct" means, the AI writes and audits the code, and I verify the results against real data before anyone relies on them. That's how I'd meet the posting's expectation that AI tools are "a core part of how you work."</p></div>
+</section>
+
+<section>
+  <div class="eyebrow">Fit</div>
+  <h2>How my background maps to the posting</h2>
+  <div class="col"><p>I've spent more than 10 years taking escalated technical problems through to root cause and building tools so the same problems don't keep coming back. Simbe's role applies that same job to robots in grocery stores. Here is each requirement from the posting with my evidence for it.</p></div>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>Posting asks for</th><th>Fit</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td>Own deployments end to end</td><td><span class="chip strong">Strong</span></td><td class="evidence">Cloud Migration Engineer at Atlassian, moving enterprise customers through cloud cutovers on fixed dates. Eight years owning escalated Polarion ALM issues at Siemens across on-prem and cloud environments.</td></tr>
+        <tr><td>Troubleshooting across network, software, hardware</td><td><span class="chip partial">Partial</span></td><td class="evidence">Root cause from diagnostic bundles, logs and direct SQL against production databases. Server administration and performance tuning. SSO/SAML access problems during cutovers. Robot hardware would be new to me.</td></tr>
+        <tr><td>Scripting to reduce manual work</td><td><span class="chip strong">Strong</span></td><td class="evidence">Built Diagtool Log Parser in Python to cut diagnostic-bundle triage time. Python and Bash automation and runbooks used across Atlassian's global support org. Python and Ruby admin automation at Pandora.</td></tr>
+        <tr><td>Linux and basic networking</td><td><span class="chip partial">Partial</span></td><td class="evidence">Linux/Unix tooling since 2015, plus server administration and REST API diagnostics. Store Wi-Fi, roaming and VPN at the field level is where I'd ramp up.</td></tr>
+        <tr><td>AI tools for investigation and automation</td><td><span class="chip strong">Strong</span></td><td class="evidence">Three production Rovo agents at Atlassian, one adopted by teams outside Cloud Support. Use Rovo CLI for log and config analysis and taught it in brown-bag sessions. Built a documentation-backed AI assistant at Siemens that cut common tickets. Built the Hermes + Claude Code automations.</td></tr>
+        <tr><td>Clear writing for remote teams</td><td><span class="chip strong">Strong</span></td><td class="evidence">200+ published technical solution articles. Trained and mentored new support engineers. Coordinate with security and identity teams during customer cutovers.</td></tr>
+        <tr><td>Jira, Confluence, Opsgenie</td><td><span class="chip strong">Strong</span></td><td class="evidence">Work at Atlassian with Jira, JSM, Confluence and Jira Automation daily. Administered Jira and Confluence for 2,000 employees at Pandora.</td></tr>
+        <tr><td>Building internal tooling (preferred)</td><td><span class="chip strong">Strong</span></td><td class="evidence">Python/PyQt production tools at ILM and DreamWorks, with regression testing. Built and run FitBike, a Rails app with 2,000+ users.</td></tr>
+        <tr><td>Robotics or spatial data (preferred)</td><td><span class="chip partial">Partial</span></td><td class="evidence">Ten years of physics simulation and rigging at ILM and DreamWorks. Built AvalancheMapper, which extracts GPS and terrain data for mapping field observations. No ROS experience yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col"><p>These are the gaps, and how I'd close each one in my first weeks:</p></div>
+  <div class="gaps">
+    <div class="gap"><h3>ROS and robot software</h3><p>I haven't worked with ROS on a live robot.</p><p class="plan">Learn Simbe's node and log layout first, then build a log-triage helper the same way I built Diagtool for Polarion bundles.</p></div>
+    <div class="gap"><h3>Store networking</h3><p>My network troubleshooting has been in data centers and cloud, not store Wi-Fi.</p><p class="plan">Learn Simbe's network requirements first, and turn the most common store IT blockers into checks in the preflight script and network probe.</p></div>
+    <div class="gap"><h3>Hardware and retail systems</h3><p>I'm new to diagnosing robot hardware and to retail POS and price feeds.</p><p class="plan">Shadow early deployments, write up each hardware failure as a runbook article, and learn how price files connect to price verification.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">A sample day</div>
+  <h2>What a Tuesday might look like</h2>
+  <div class="col"><p>This is a hypothetical day with three sites at different stages, based on the posting's "multiple concurrent deployments."</p></div>
+  <div class="day col">
+    <div class="slot"><time>07:30</time><p>Read the overnight preflight and health reports. Site C's upload speed dropped after 2 a.m., so I open a ticket before the store asks.</p></div>
+    <div class="slot"><time>08:30</time><p>Site A install day. The contractor is on site. I go through the checklist in chat with photo checkpoints. The dock outlet is on a switched circuit, so we move the dock to the backup location already in the site record.</p></div>
+    <div class="slot"><time>10:15</time><p>Site A network. The probe shows one endpoint blocked. I send the report to store IT, and the allowlist is updated within the hour.</p></div>
+    <div class="slot"><time>12:00</time><p>Site B digital config. The validator flags a schedule overlapping the store's morning restock. I fix it and note the pattern for that banner.</p></div>
+    <div class="slot"><time>14:00</time><p>Site A first mapping run and route setup. I watch coverage live, and a seasonal display blocks aisle 14.</p></div>
+    <div class="slot"><time>15:30</time><p>Site C root cause: the store's ISP shaping traffic at night. I document it, escalate with evidence, and add a check to the probe.</p></div>
+    <div class="slot"><time>16:30</time><p>Update Jira and the status board, and add the switched-outlet issue to the playbook's dock checklist.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">For the call</div>
+  <h2>What I want to learn from Simbe</h2>
+  <ol class="questions col">
+    <li>At peak rollout, how many sites would one engineer own at a time, and how many go live per week?</li>
+    <li>Today, what delays or breaks deployments most often: network, physical install, mapping, or validation?</li>
+    <li>Who are the field contractors, and how much guidance do they usually need?</li>
+    <li>What tooling exists now? Is deployment tracking Jira plus spreadsheets, or is there an internal system?</li>
+    <li>How long is the validation window before handoff, and who decides that a site has passed?</li>
+    <li>Does deploying Tally 4.0 differ from earlier generations, and how do Tally Spot and RFID sites fit in?</li>
+    <li>What remote access will I have for troubleshooting: logs, telemetry, a shell on the robot?</li>
+    <li>What would success look like by February 2027? Is there a path beyond the contract?</li>
+  </ol>
+</section>
+
+<footer>
+  <p>Written by David Deuber from public sources and the posted job description. These are my assumptions, not Simbe's internal processes.</p>
+  <ul>
+    <li><a href="https://www.simberobotics.com/">simberobotics.com</a>: products, Store Intelligence, customers</li>
+    <li><a href="https://www.robotics247.com/article/simbe-surpasses-3000-autonomous-shelf-intelligence-units-milestone">Robotics 24/7</a>: 3,000 units, 75+ banners, UL 3300 (Sept 2026)</li>
+    <li><a href="https://theshelbyreport.com/2026/09/21/simbe-surpasses-3000-units-in-shelf-intelligence-fleet/">The Shelby Report</a>: fleet milestone coverage</li>
+    <li><a href="https://www.robotics247.com/article/br-stores-deploys-simbes-autonomous-inventory-robot-tally-across-nebraska-locations/simbe_robotics">Robotics 24/7</a>: B&amp;R Stores deployment, Nebraska (June 2026)</li>
+  </ul>
+</footer>
+
+</div>
+</body>
+</html>
