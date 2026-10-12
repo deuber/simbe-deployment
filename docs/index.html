@@ -143,9 +143,9 @@ ol.questions li::marker { font-family: var(--mono); color: var(--accent); }
 .chip.partial { background: var(--flag-soft); color: var(--flag); }
 td.evidence { font-weight: 400; white-space: normal; }
 .gaps { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
-.gap { border: 1px dashed var(--flag); border-radius: 6px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.gap { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 16px; display: grid; gap: 8px; align-content: start; }
 .gap p { font-size: 0.92rem; }
-.gap p.plan { color: var(--muted); }
+.gap p.plan { color: var(--fg); }
 
 footer { border-top: 1px solid var(--line); padding-top: 28px; display: grid; gap: 10px; font-size: 0.88rem; color: var(--muted); }
 footer ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
@@ -297,28 +297,28 @@ REQUIRED = [<span class="s">"ssid"</span>, <span class="s">"wifi_auth"</span>, <
 <section>
   <div class="eyebrow">Fit</div>
   <h2>How my background maps to the posting</h2>
-  <div class="col"><p>I've spent more than 10 years taking escalated technical problems through to root cause and building tools so the same problems don't keep coming back. Simbe's role applies that same job to robots in grocery stores. Here is each requirement from the posting with my evidence for it.</p></div>
+  <div class="col"><p>I've spent more than 10 years taking escalated technical problems through to root cause and building tools so the same problems don't keep coming back. Simbe's role applies that same job to robots in grocery stores. Here is each requirement from the posting and where I've done that work.</p></div>
   <div class="tablebox">
     <table>
-      <thead><tr><th>Posting asks for</th><th>Fit</th><th>Evidence</th></tr></thead>
+      <thead><tr><th>Posting asks for</th><th>Where I've done it</th></tr></thead>
       <tbody>
-        <tr><td>Own deployments end to end</td><td><span class="chip strong">Strong</span></td><td class="evidence">Cloud Migration Engineer at Atlassian, moving enterprise customers through cloud cutovers on fixed dates. Eight years owning escalated Polarion ALM issues at Siemens across on-prem and cloud environments.</td></tr>
-        <tr><td>Troubleshooting across network, software, hardware</td><td><span class="chip partial">Partial</span></td><td class="evidence">Root cause from diagnostic bundles, logs and direct SQL against production databases. Server administration and performance tuning. SSO/SAML access problems during cutovers. Robot hardware would be new to me.</td></tr>
-        <tr><td>Scripting to reduce manual work</td><td><span class="chip strong">Strong</span></td><td class="evidence">Built Diagtool Log Parser in Python to cut diagnostic-bundle triage time. Python and Bash automation and runbooks used across Atlassian's global support org. Python and Ruby admin automation at Pandora.</td></tr>
-        <tr><td>Linux and basic networking</td><td><span class="chip partial">Partial</span></td><td class="evidence">Linux/Unix tooling since 2015, plus server administration and REST API diagnostics. Store Wi-Fi, roaming and VPN at the field level is where I'd ramp up.</td></tr>
-        <tr><td>AI tools for investigation and automation</td><td><span class="chip strong">Strong</span></td><td class="evidence">Three production Rovo agents at Atlassian, one adopted by teams outside Cloud Support. Use Rovo CLI for log and config analysis and taught it in brown-bag sessions. Built a documentation-backed AI assistant at Siemens that cut common tickets. Built the Hermes + Claude Code automations.</td></tr>
-        <tr><td>Clear writing for remote teams</td><td><span class="chip strong">Strong</span></td><td class="evidence">200+ published technical solution articles. Trained and mentored new support engineers. Coordinate with security and identity teams during customer cutovers.</td></tr>
-        <tr><td>Jira, Confluence, Opsgenie</td><td><span class="chip strong">Strong</span></td><td class="evidence">Work at Atlassian with Jira, JSM, Confluence and Jira Automation daily. Administered Jira and Confluence for 2,000 employees at Pandora.</td></tr>
-        <tr><td>Building internal tooling (preferred)</td><td><span class="chip strong">Strong</span></td><td class="evidence">Python/PyQt production tools at ILM and DreamWorks, with regression testing. Built and run FitBike, a Rails app with 2,000+ users.</td></tr>
-        <tr><td>Robotics or spatial data (preferred)</td><td><span class="chip partial">Partial</span></td><td class="evidence">Ten years of physics simulation and rigging at ILM and DreamWorks. Built AvalancheMapper, which extracts GPS and terrain data for mapping field observations. No ROS experience yet.</td></tr>
+        <tr><td>Own deployments end to end</td><td class="evidence">Cloud Migration Engineer at Atlassian, moving enterprise customers through cloud cutovers on fixed dates. Eight years owning escalated Polarion ALM issues at Siemens across on-prem and cloud environments.</td></tr>
+        <tr><td>Troubleshooting across network, software, hardware</td><td class="evidence">Root cause from diagnostic bundles, logs and direct SQL against production databases. Server administration and performance tuning. SSO/SAML access problems during cutovers. Same method every time: isolate the layer, gather evidence, fix or escalate with documentation.</td></tr>
+        <tr><td>Scripting to reduce manual work</td><td class="evidence">Built Diagtool Log Parser in Python to cut diagnostic-bundle triage time. Python and Bash automation and runbooks used across Atlassian's global support org. Python and Ruby admin automation at Pandora.</td></tr>
+        <tr><td>Linux and basic networking</td><td class="evidence">Linux/Unix tooling since 2015, plus server administration across on-prem and cloud environments and REST API diagnostics.</td></tr>
+        <tr><td>AI tools for investigation and automation</td><td class="evidence">Three production Rovo agents at Atlassian, one adopted by teams outside Cloud Support. Use Rovo CLI for log and config analysis and taught it in brown-bag sessions. Built a documentation-backed AI assistant at Siemens that cut common tickets. Built the Hermes + Claude Code automations.</td></tr>
+        <tr><td>Clear writing for remote teams</td><td class="evidence">200+ published technical solution articles. Trained and mentored new support engineers. Coordinate with security and identity teams during customer cutovers.</td></tr>
+        <tr><td>Jira, Confluence, Opsgenie</td><td class="evidence">Work at Atlassian with Jira, JSM, Confluence and Jira Automation daily. Administered Jira and Confluence for 2,000 employees at Pandora.</td></tr>
+        <tr><td>Building internal tooling (preferred)</td><td class="evidence">Python/PyQt production tools at ILM and DreamWorks, with regression testing. Built and run FitBike, a Rails app with 2,000+ users.</td></tr>
+        <tr><td>Robotics or spatial data (preferred)</td><td class="evidence">Ten years of physics simulation and rigging at ILM and DreamWorks. Built AvalancheMapper, which extracts GPS and terrain data for mapping field observations.</td></tr>
       </tbody>
     </table>
   </div>
-  <div class="col"><p>These are the gaps, and how I'd close each one in my first weeks:</p></div>
+  <div class="col"><p>Where I'd focus my first weeks:</p></div>
   <div class="gaps">
-    <div class="gap"><h3>ROS and robot software</h3><p>I haven't worked with ROS on a live robot.</p><p class="plan">Learn Simbe's node and log layout first, then build a log-triage helper the same way I built Diagtool for Polarion bundles.</p></div>
-    <div class="gap"><h3>Store networking</h3><p>My network troubleshooting has been in data centers and cloud, not store Wi-Fi.</p><p class="plan">Learn Simbe's network requirements first, and turn the most common store IT blockers into checks in the preflight script and network probe.</p></div>
-    <div class="gap"><h3>Hardware and retail systems</h3><p>I'm new to diagnosing robot hardware and to retail POS and price feeds.</p><p class="plan">Shadow early deployments, write up each hardware failure as a runbook article, and learn how price files connect to price verification.</p></div>
+    <div class="gap"><h3>ROS and robot software</h3><p class="plan">Learn Simbe's node and log layout first, then build a log-triage helper the same way I built Diagtool for Polarion bundles.</p></div>
+    <div class="gap"><h3>Store networking</h3><p class="plan">Learn Simbe's network requirements first, and turn the most common store IT blockers into checks in the preflight script and network probe.</p></div>
+    <div class="gap"><h3>Hardware and retail systems</h3><p class="plan">Shadow early deployments, write up each hardware failure as a runbook article, and learn how price files connect to price verification.</p></div>
   </div>
 </section>
 
